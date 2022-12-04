@@ -4,4 +4,4 @@ coming soon
 
 参考自[Reversible Data Hiding in Color Image With Grayscale Invariance ](https://github.com/cnarutox/RDH-in-Color-Image-With-Grayscale-Invariance)
 
-改进了参数选择，添加了比特流压缩
+修正了原项目嵌入代码的错误，改进了参数选择，添加了比特流压缩
