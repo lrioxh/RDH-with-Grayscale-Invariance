@@ -1,5 +1,6 @@
 import numpy as np
-
+import cv2
+from huffman import createTree,walkTree_VLR,encodeImage,decodeHuffmanByDict
 
 def encode_str(msg):
     '''字符串转二进制ascii'''
@@ -43,8 +44,9 @@ tree4c={'0000':'0','1111':'100',
 
 
 def huffman_encode4(stream):
-    '''固定的霍夫曼树编码,适用于连续01,且0较多'''
+    '''预定义的霍夫曼树编码,适用于连续01,且0较多'''
     # tree4=dict.fromkeys(tree4c.keys, 0)
+    stream=''.join(['0' if m=='1' else '1' for m in stream])
     lenth=len(stream)
     res=''
     r=lenth%4
@@ -78,6 +80,8 @@ def huffman_decode4(stream):
                 res+=ivtree[stream[i:i+h]]
                 i+=h
                 break
+    
+    res=''.join(['0' if m=='1' else '1' for m in res])
     return res
 
 
@@ -232,10 +236,53 @@ def compression_decode(stream,fix=4):
             i+=1
     return res
 
+def huffman_encode(msg):
+    '''使用根据比特流构建的霍夫曼树编码'''
+    i=0
+    imgcode=[]
+    while i<len(msg):
+        # imgcode.append(''.join([str(j) for j in msg[i:i+4]]))
+        imgcode.append(msg[i:i+4])
+        i+=4
+    imgcode=np.array(imgcode)
+    hist_dict = {}
+    global Huffman_encode_dict
+ 
+    # 得到原始图像的直方图，出现次数为0的元素(像素值)没有加入
+    for p in imgcode:
+        if p not in hist_dict:
+            hist_dict[p] = 1
+        else:
+            hist_dict[p] += 1
+    huffman_root_node = createTree(hist_dict)
+    Huffman_encode_dict=walkTree_VLR(huffman_root_node)
+    res = encodeImage(imgcode, Huffman_encode_dict)
+    return res
+
+def huffman_decode(msg):
+    global Huffman_encode_dict
+    mg_src_val_array = decodeHuffmanByDict(msg, Huffman_encode_dict)
+    res=''.join(mg_src_val_array)
+    return res
+
 if __name__ == '__main__':
-    s="00101100111111111000000000111111"
+    # s="00101100111111111000000000111111"
     # golomb_encode2
     # huffman_encode4
-    s_=huffman_encode4(s)
-    print(len(s_)/len(s),s==huffman_decode4(s_))
+    # huffman_encode
+    # compression_encode
+    # s_=huffman_encode4(s)
+    # print(len(s_)/len(s),s==huffman_decode4(s_))
+
+    msg=cv2.imread('./data/msg.jpg',cv2.CV_8UC1)
+    # cv2.imshow('1',msg)
+    # cv2.waitKey(0)
+    # print(msg.shape)
+    ret, msg = cv2.threshold(msg, 200, 255, cv2.THRESH_BINARY)
+    msg[msg>0]=1
+    msg=encode_img(msg)
+    msgC=huffman_encode4(msg)
+    print(len(msgC)/len(msg),msg==huffman_decode4(msgC))
+    msgC=compression_encode(msg)
+    print(len(msgC)/len(msg),msg==compression_decode(msgC))
     
